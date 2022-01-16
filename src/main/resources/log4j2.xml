@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+    <Properties>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS}|%highlight{%-5level }[%style{%t}{bright,blue}]|%style{%C{1.}}{bright,yellow}:%msg%n%throwable</Property>
+        <Property name="APP_LOG_ROOT">D:/einvioice/logs</Property>
+    </Properties>
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout
+                    pattern="${LOG_PATTERN}" />
+        </Console>
+
+        <RollingFile name="RollingFile"
+                     fileName="${APP_LOG_ROOT}/spring-boot-logger-log4j2.log"
+                     filePattern="${APP_LOG_ROOT}/$${date:yyyy-MM}/spring-boot-logger-log4j2-%d{-dd-MMMM-yyyy}-%i.log.gz">
+            <PatternLayout>
+                <pattern>%d %p %C{1.} [%t] %m%n</pattern>
+            </PatternLayout>
+            <Policies>
+                <!-- rollover on startup, daily and when the file reaches
+                    10 MegaBytes -->
+                <OnStartupTriggeringPolicy />
+                <SizeBasedTriggeringPolicy
+                        size="10 MB" />
+                <TimeBasedTriggeringPolicy />
+            </Policies>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <!-- LOG everything at INFO level -->
+        <Root level="info">
+            <AppenderRef ref="Console" />
+            <AppenderRef ref="RollingFile" />
+        </Root>
+
+        <!-- LOG "rick.einvioice*" at TRACE level -->
+        <Logger name="rick.einvioice" level="trace"></Logger>
+    </Loggers>
+</Configuration>
