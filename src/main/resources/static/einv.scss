@@ -1,0 +1,40 @@
+$primary: #3d82ad;
+$white: #fff;
+$text: #333;
+$blue: #5fbfff;
+$green: #00aa00;
+$yellow: #f3da9a;
+$orange: #ff8800;
+$pink: #faaad1;
+$red: #fa5858;
+$darkRed: #a11313;
+
+//layout
+body {
+  box-sizing: border-box;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif, "微軟正黑體";
+}
+
+.wrap {
+  width: 500px;
+  margin: 0 auto;
+}
+
+
+.title {
+  color: $primary;
+  border: 1px solid $primary;
+  padding: 10px 5px;
+  margin-bottom: 10px;
+  margin-top: 10px;
+
+  &:hover {
+    background-color: $primary;
+    color: $white;
+  }
+}
+
+.detail {
+  display: none;
+  line-height: 1.5;
+}

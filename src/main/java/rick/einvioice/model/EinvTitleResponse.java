@@ -1,9 +1,9 @@
 package rick.einvioice.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.io.Serializable;
 import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * 載具發票表頭查詢 responose
@@ -32,4 +32,5 @@ public class EinvTitleResponse extends EinvResponse implements Serializable {
     public void setDetails(List<EinvTitleBean> details) {
         this.details = details;
     }
+
 }

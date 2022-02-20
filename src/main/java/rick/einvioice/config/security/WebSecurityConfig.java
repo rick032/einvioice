@@ -22,7 +22,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http.headers().frameOptions().sameOrigin();
         http.httpBasic().and()
                 .authorizeRequests()
-                .antMatchers("/css/**", "/js/**", "/images/**").permitAll()
+                .antMatchers("/css/**", "/src/main/WEB-INF/js/**", "/images/**").permitAll()
                 .anyRequest().authenticated()
                 .and().formLogin().defaultSuccessUrl("/queryDetail")
                 .and()

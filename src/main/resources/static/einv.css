@@ -1,0 +1,23 @@
+body {
+    box-sizing: border-box;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif, "微軟正黑體";
+}
+.wrap {
+    width: 500px;
+    margin: 0 auto;
+}
+.title {
+    color: #3d82ad;
+    border: 1px solid #3d82ad;
+    padding: 10px 5px;
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+.title:hover {
+    background-color: #3d82ad;
+    color: #fff;
+}
+.detail {
+    display: none;
+    line-height: 1.5;
+}
