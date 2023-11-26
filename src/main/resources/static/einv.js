@@ -13,8 +13,12 @@ $(function () {
     var ld = lastMonth.getDate()
     $("#startDate").val([lastMonth.getFullYear(),lm>9?lm:'0'+lm,ld>9?ld:'0'+ld].join("-"));
     $("#endDate").val([thisMonth.getFullYear(),m>9?m:'0'+m, d>9?d:'0'+d].join("-"));
-    $(".title").hover(function(){
-        $(this).next().slideToggle();
+    $("tr.accordion-header").hover(function() {
+        // $(this).next().slideToggle();
+        
+        $(this).next("tr.detail").slideDown();
+        $(this).siblings().next("tr.detail").slideUp();
+        
     });
     $("th.search").click(function (e) {
         $(this).toggleClass('text-warning');

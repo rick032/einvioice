@@ -23,10 +23,13 @@ import rick.einvioice.utils.EinvTitle;
 import rick.einvioice.utils.EinvUtils;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Controller
@@ -41,13 +44,92 @@ public class EinvController {
     EinvUtils einvUtils;
     @Autowired
     ParamsRepository paramsRepository;
-    final String DATE_FORMAT = "yyyy/MM/dd";
 
+
+    /**
+     * 
+     * @param cardNo
+     * @param cardEncrypt
+     * @param date
+     * @return
+     * @throws IOException
+     */
+    @GetMapping(value = "/querySpecifyDate")
+    public String querySpecifyDate(@RequestParam(value = "cardNo") String cardNo,
+                                   @RequestParam(value = "cardEncrypt") String cardEncrypt,
+                                   @RequestParam(value = "date") String date) throws IOException, ParseException {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(EinvUtils.DATE_FORMAT);
+        StringBuilder result = new StringBuilder();
+        String API_ID = paramsRepository.findValueByKey(EinvConstants.API_ID);
+        //API_KEY = paramsRepository.findValueByKey(EinvConstants.API_KEY);
+
+        Calendar lastMonth = Calendar.getInstance();
+        Date start = dateFormat.parse(date);
+        String startDate = date;
+        // 月底
+        lastMonth.setTime(start);
+        lastMonth.set(Calendar.DAY_OF_MONTH, lastMonth.getActualMaximum(Calendar.DAY_OF_MONTH));
+        String endDate = dateFormat.format(lastMonth.getTime());
+        result.append("startDate:").append(startDate).append(",").append("endDate:").append(endDate).append("<br/>");
+        LOGGER.debug("startDate:{},endDate:{}", startDate, endDate);
+        int retry1 = 0;
+        getInv(cardNo, cardEncrypt, dateFormat, API_ID, startDate, endDate, retry1);
+
+        return "queryDetail";
+    }
+
+    private void getInv(String cardNo, String cardEncrypt, SimpleDateFormat dateFormat, String API_ID, String startDate, String endDate, int retry1) throws IOException {
+        while (retry1 < 10) {
+            String json = einvUtils.send(einvUtils.getTitlePairs(API_ID, cardNo, cardEncrypt, startDate, endDate), EinvTitle.EINVIOICE_URL + EinvTitle.載具發票查詢URL);
+            if (json != null && !json.trim().isEmpty()) {
+                retry1 = 3;
+                ObjectMapper objectMapper = new ObjectMapper();
+                EinvTitleResponse response = objectMapper.readValue(json, EinvTitleResponse.class);
+                // 200:成功   400:查無資料   401:認證失敗   500:系統發生錯誤
+                if ("200".equals(response.getCode())) {
+                    AtomicInteger row = new AtomicInteger();
+                    response.getDetails().forEach(x -> {
+                        LOGGER.info(x.getInvNum() + row.getAndIncrement());
+                        int retry2 = 0;
+                        while (retry2 < 3) {
+                            try {
+                                String jsonDetail = einvUtils.send(einvUtils.getDetailsPairs(API_ID, cardNo, cardEncrypt, dateFormat.format(x.getInv_Date()), x.getInvNum()), EinvDetail.EINVIOICE_URL + EinvDetail.載具發票查詢URL);
+
+                                if (jsonDetail != null && !jsonDetail.trim().isEmpty()) {
+                                    EinvDetailResponse detailResponse = objectMapper.readValue(jsonDetail, EinvDetailResponse.class);
+                                    x.setInvDetails(detailResponse.getDetails());
+                                    retry2 = 3;
+                                }
+                            } catch (JsonProcessingException e) {
+                                e.printStackTrace();
+                                retry2++;
+                            }
+                        }
+                    });
+                    einvTitleRepository.saveAll(response.getDetails().stream().filter(x ->
+                            x.getInvDetails() != null && einvTitleRepository.findByInvNum(x.getInvNum()) == null
+                    ).collect(Collectors.toList()));
+                }
+
+            } else {
+                LOGGER.error("fail to get api.einvoice.nat.gov.tw");
+            }
+        }
+    }
+
+    /**
+     *
+     * @param cardNo
+     * @param cardEncrypt
+     * @param months
+     * @return
+     * @throws IOException
+     */
     @GetMapping(value = "/queryMonths")
     public String queryLast6Months(@RequestParam(value = "cardNo") String cardNo,
                                    @RequestParam(value = "cardEncrypt") String cardEncrypt,
                                    @RequestParam(value = "months") Integer months) throws IOException {
-        SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+        SimpleDateFormat dateFormat = new SimpleDateFormat(EinvUtils.DATE_FORMAT);
         StringBuilder result = new StringBuilder();
         String API_ID = paramsRepository.findValueByKey(EinvConstants.API_ID);
         //API_KEY = paramsRepository.findValueByKey(EinvConstants.API_KEY);
@@ -61,25 +143,10 @@ public class EinvController {
             String endDate = dateFormat.format(lastMonth.getTime());
             result.append("startDate:").append(startDate).append(",").append("endDate:").append(endDate).append("<br/>");
             LOGGER.debug("startDate:{},endDate:{}", startDate, endDate);
-            String json = einvUtils.send(einvUtils.getTitlePairs(API_ID, cardNo, cardEncrypt, startDate, endDate), EinvTitle.EINVIOICE_URL + EinvTitle.載具發票查詢URL);
-            ObjectMapper objectMapper = new ObjectMapper();
-            EinvTitleResponse response = objectMapper.readValue(json, EinvTitleResponse.class);
-            if ("200".equals(response.getCode())) {
-                response.getDetails().forEach(x -> {
-                    String jsonDetail = einvUtils.send(einvUtils.getDetailsPairs(API_ID, cardNo, cardEncrypt, dateFormat.format(x.getInv_Date()), x.getInvNum()), EinvDetail.EINVIOICE_URL + EinvDetail.載具發票查詢URL);
-                    try {
-                        EinvDetailResponse detailResponse = objectMapper.readValue(jsonDetail, EinvDetailResponse.class);
-                        x.setInvDetails(detailResponse.getDetails());
-                    } catch (JsonProcessingException e) {
-                        e.printStackTrace();
-                    }
-                });
-                einvTitleRepository.saveAll(response.getDetails().stream().filter(x ->
-                        x.getInvDetails() != null && einvTitleRepository.findByInvNum(x.getInvNum()) == null
-                ).collect(Collectors.toList()));
-            }
+            int retry1 = 0;
+            getInv(cardNo, cardEncrypt, dateFormat, API_ID, startDate, endDate, retry1);
         }
-        return result.toString();
+        return "queryDetail";
     }
 
     @GetMapping(value = "/queryDetail")

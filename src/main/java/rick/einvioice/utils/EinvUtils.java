@@ -24,6 +24,8 @@ import java.util.*;
 public class EinvUtils {
     private static final Logger LOGGER = LogManager.getLogger(EinvUtils.class);
 
+    public static final String DATE_FORMAT = "yyyy/MM/dd";
+
     public EinvUtils() {
     }
 

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
-import java.sql.Date;
 
 @Entity
 @Table(name = "EINVDETIAL", indexes = {

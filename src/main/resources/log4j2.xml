@@ -2,7 +2,7 @@
 <Configuration status="WARN" monitorInterval="30">
     <Properties>
         <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS}|%highlight{%-5level }[%style{%t}{bright,blue}]|%style{%C{1.}}{bright,yellow}:%msg%n%throwable</Property>
-        <Property name="APP_LOG_ROOT">D:/einvioice/logs</Property>
+        <Property name="APP_LOG_ROOT">F:/Workarea/einvioice/logs</Property>
     </Properties>
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
